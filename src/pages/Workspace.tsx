@@ -264,11 +264,11 @@ const Workspace = () => {
     }
   };
 
-  // Sprite render position in stage coordinates (center origin)
-  const spriteLeft = STAGE_W / 2 + sprite.x;
-  const spriteTop = STAGE_H / 2 + sprite.y;
-  const appleLeft = STAGE_W / 2 + APPLE_X;
-  const appleTop = STAGE_H / 2 + APPLE_Y;
+  // Sprite/apple positions as percentages (center origin)
+  const spriteLeftPct = 50 + (sprite.x / STAGE_W) * 100;
+  const spriteTopPct = 50 + (sprite.y / STAGE_H) * 100;
+  const appleLeftPct = 50 + (APPLE_X / STAGE_W) * 100;
+  const appleTopPct = 50 + (APPLE_Y / STAGE_H) * 100;
 
   return (
     <div className="h-screen flex flex-col bg-muted/30">
