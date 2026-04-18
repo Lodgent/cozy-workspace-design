@@ -521,8 +521,6 @@ const Workspace = () => {
                   </div>
                 </div>
               )}
-                </div>
-              </div>
               {/* Stage controls overlay */}
               <div className="absolute top-2 right-2 flex gap-1 z-10">
                 <button
