@@ -487,57 +487,40 @@ const Workspace = () => {
             >
               {/* Stage background */}
               <div className="absolute inset-0 bg-gradient-to-b from-info/20 to-success/10" />
-              {/* Inner positioning layer scaled to STAGE_W x STAGE_H */}
+              {/* Apple */}
               <div
-                className="absolute inset-0"
+                className="absolute"
                 style={{
-                  // Use viewBox-like scaling via transform
+                  left: `${appleLeftPct}%`,
+                  top: `${appleTopPct}%`,
+                  transform: "translate(-50%, -50%)",
                 }}
               >
+                <span className="text-3xl">🍎</span>
+              </div>
+              {/* Cat */}
+              {sprite.visible && (
                 <div
-                  className="absolute"
+                  className="absolute transition-all duration-200 ease-linear"
                   style={{
-                    width: STAGE_W,
-                    height: STAGE_H,
-                    transform: "scale(var(--stage-scale, 1))",
-                    transformOrigin: "top left",
-                    inset: 0,
+                    left: `${spriteLeftPct}%`,
+                    top: `${spriteTopPct}%`,
+                    transform: `translate(-50%, -50%) rotate(${sprite.direction - 90}deg)`,
                   }}
                 >
-                  {/* Apple */}
-                  <div
-                    className="absolute"
-                    style={{
-                      left: appleLeft,
-                      top: appleTop,
-                      transform: "translate(-50%, -50%)",
-                    }}
-                  >
-                    <span className="text-3xl">🍎</span>
-                  </div>
-                  {/* Cat */}
-                  {sprite.visible && (
-                    <div
-                      className="absolute transition-all duration-200 ease-linear"
-                      style={{
-                        left: spriteLeft,
-                        top: spriteTop,
-                        transform: `translate(-50%, -50%) rotate(${sprite.direction - 90}deg)`,
-                      }}
-                    >
-                      <div className="relative">
-                        <span className="text-5xl block">🐱</span>
-                        {sprite.saying && (
-                          <div
-                            className="absolute -top-8 left-1/2 -translate-x-1/2 bg-card border border-border rounded-xl px-2 py-1 text-xs font-bold whitespace-nowrap shadow-md"
-                            style={{ transform: `translate(-50%, 0) rotate(${-(sprite.direction - 90)}deg)` }}
-                          >
-                            {sprite.saying}
-                          </div>
-                        )}
+                  <div className="relative">
+                    <span className="text-5xl block">🐱</span>
+                    {sprite.saying && (
+                      <div
+                        className="absolute -top-8 left-1/2 -translate-x-1/2 bg-card border border-border rounded-xl px-2 py-1 text-xs font-bold whitespace-nowrap shadow-md"
+                        style={{ transform: `translate(-50%, 0) rotate(${-(sprite.direction - 90)}deg)` }}
+                      >
+                        {sprite.saying}
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
+                </div>
+              )}
                 </div>
               </div>
               {/* Stage controls overlay */}
