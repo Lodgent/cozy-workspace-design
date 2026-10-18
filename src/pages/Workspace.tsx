@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   ArrowLeft, Play, Square, CheckCircle, RotateCcw,
   Code2, Image, Volume2, Flag, ChevronLeft, ChevronRight,
-  Plus, Trash2, Copy, ZoomIn, ZoomOut
+  Plus, ZoomIn, ZoomOut, Lightbulb, Sparkles, X, Wand2
 } from "lucide-react";
 
 // Scratch block categories
@@ -26,13 +26,95 @@ const mockSprites = [
   { id: "2", name: "Яблоко", emoji: "🍎", active: false },
 ];
 
+interface WorkspaceBlock {
+  id: number;
+  text: string;
+  color: string;
+  category: string;
+}
+
+// Эталонное решение задания «Кот идет к яблоку»
+const SOLUTION = ["когда ⚑ нажат", "идти 10 шагов"];
+
+// Анализ программы ученика: находит первую проблему
+function analyzeProgram(blocks: WorkspaceBlock[]) {
+  if (blocks.length === 0) {
+    return {
+      blockId: null as number | null,
+      problem: "Рабочая область пустая",
+      explanation: "Любая программа в Scratch начинается с блока события. Без него блоки не знают, когда запускаться.",
+      example: "когда ⚑ нажат → идти 10 шагов",
+      fix: { text: "когда ⚑ нажат", color: "bg-scratch-events", category: "events", position: 0 },
+    };
+  }
+  const hasStart = blocks.some(b => b.category === "events");
+  if (!hasStart) {
+    return {
+      blockId: blocks[0].id,
+      problem: "Нет блока начала программы",
+      explanation: "Программа не запустится, потому что нет блока «когда ⚑ нажат». Он говорит коту: «Начинай, когда нажмут зелёный флажок!»",
+      example: "когда ⚑ нажат → идти 10 шагов",
+      fix: { text: "когда ⚑ нажат", color: "bg-scratch-events", category: "events", position: 0 },
+    };
+  }
+  const hasMotion = blocks.some(b => b.category === "motion");
+  if (!hasMotion) {
+    const startBlock = blocks.find(b => b.category === "events")!;
+    return {
+      blockId: startBlock.id,
+      problem: "Кот никуда не идёт",
+      explanation: "Программа запускается, но в ней нет блока движения. Добавь «идти 10 шагов» из категории «Движение», чтобы кот сдвинулся к яблоку.",
+      example: "когда ⚑ нажат → идти 10 шагов",
+      fix: { text: "идти 10 шагов", color: "bg-scratch-motion", category: "motion", position: blocks.length },
+    };
+  }
+  return null; // ошибок нет
+}
+
+let nextBlockId = 1;
+
 const Workspace = () => {
   const { courseId, lessonId } = useParams();
   const [activeCategory, setActiveCategory] = useState("motion");
   const [isRunning, setIsRunning] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [program, setProgram] = useState<WorkspaceBlock[]>([
+    { id: nextBlockId++, text: "когда ⚑ нажат", color: "bg-scratch-events", category: "events" },
+  ]);
+
+  // Трёхуровневая система подсказок: 0 = выкл, 1 = подсветка, 2 = объяснение, 3 = автовставка
+  const [hintLevel, setHintLevel] = useState(0);
 
   const currentCategory = blockCategories.find(c => c.id === activeCategory)!;
+  const issue = analyzeProgram(program);
+
+  const addBlock = (text: string, color: string, category: string) => {
+    setProgram(prev => [...prev, { id: nextBlockId++, text, color, category }]);
+    setHintLevel(0);
+  };
+
+  const removeBlock = (id: number) => {
+    setProgram(prev => prev.filter(b => b.id !== id));
+    setHintLevel(0);
+  };
+
+  const requestHint = () => {
+    if (!issue) return;
+    setHintLevel(prev => Math.min(prev + 1, 3));
+  };
+
+  const applyFix = () => {
+    if (!issue) return;
+    const newBlock: WorkspaceBlock = { id: nextBlockId++, ...issue.fix };
+    setProgram(prev => {
+      const next = [...prev];
+      next.splice(issue.fix.position, 0, newBlock);
+      return next;
+    });
+    setHintLevel(0);
+  };
+
+  const hintLabels = ["Подсказка", "Где ошибка?", "Почему?", "Исправить за меня"];
 
   return (
     <div className="h-screen flex flex-col bg-muted/30">
@@ -62,7 +144,7 @@ const Workspace = () => {
               <><Play className="w-4 h-4" /> Запуск</>
             )}
           </Button>
-          <Button variant="outline" size="sm" className="rounded-xl font-bold gap-2">
+          <Button variant="outline" size="sm" className="rounded-xl font-bold gap-2" onClick={() => { setProgram([]); setHintLevel(0); }}>
             <RotateCcw className="w-4 h-4" />
             <span className="hidden sm:inline">Сбросить</span>
           </Button>
@@ -95,11 +177,90 @@ const Workspace = () => {
                 Собери программу, чтобы кот дошел до яблока. Используй блок <strong>«идти 10 шагов»</strong> из категории «Движение».
               </p>
             </div>
-            <div className="bg-accent/20 rounded-xl p-3 space-y-2">
-              <p className="text-xs font-bold text-accent-foreground">💡 Подсказка</p>
-              <p className="text-xs text-muted-foreground">
-                Начни с блока «когда ⚑ нажат» и добавь блок движения.
-              </p>
+
+            {/* Трёхуровневая система подсказок */}
+            <div className="bg-accent/20 rounded-xl p-3 space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-bold text-accent-foreground flex items-center gap-1.5">
+                  <Lightbulb className="w-3.5 h-3.5" /> Подсказки
+                </p>
+                {hintLevel > 0 && (
+                  <div className="flex gap-1">
+                    {[1, 2, 3].map(lvl => (
+                      <div
+                        key={lvl}
+                        className={`w-2 h-2 rounded-full transition-colors ${hintLevel >= lvl ? "bg-accent-foreground" : "bg-accent-foreground/25"}`}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {hintLevel === 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Застрял? Нажми кнопку — я помогу шаг за шагом.
+                </p>
+              )}
+
+              {/* Уровень 1: визуальная подсветка */}
+              {hintLevel === 1 && issue && (
+                <div className="space-y-2 animate-in fade-in slide-in-from-top-1 duration-300">
+                  <p className="text-xs font-bold text-foreground">Уровень 1 · Где ошибка?</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Посмотри на рабочую область — я подсветил место, где что-то не так. {issue.blockId === null ? "Она пустая!" : "Ищи мигающий блок."}
+                  </p>
+                </div>
+              )}
+
+              {/* Уровень 2: текстовое объяснение с примером */}
+              {hintLevel === 2 && issue && (
+                <div className="space-y-2 animate-in fade-in slide-in-from-top-1 duration-300">
+                  <p className="text-xs font-bold text-foreground">Уровень 2 · Почему?</p>
+                  <p className="text-xs font-bold text-destructive">{issue.problem}</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{issue.explanation}</p>
+                  <div className="bg-card rounded-lg p-2 border border-border/50">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Пример</p>
+                    <p className="text-xs font-mono font-bold text-foreground">{issue.example}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Уровень 3: автовставка исправляющего блока */}
+              {hintLevel === 3 && issue && (
+                <div className="space-y-2 animate-in fade-in slide-in-from-top-1 duration-300">
+                  <p className="text-xs font-bold text-foreground">Уровень 3 · Исправить за меня</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Я могу сам добавить блок <strong>«{issue.fix.text}»</strong> в твою программу. Вставить?
+                  </p>
+                  <div className={`scratch-block ${issue.fix.color} text-primary-foreground text-xs pointer-events-none`}>
+                    {issue.fix.text}
+                  </div>
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={applyFix} className="rounded-lg font-bold text-xs gap-1.5 flex-1 h-8">
+                      <Wand2 className="w-3.5 h-3.5" /> Вставить
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => setHintLevel(0)} className="rounded-lg font-bold text-xs h-8">
+                      <X className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {!issue && hintLevel === 0 && (
+                <p className="text-xs text-success font-bold">✅ Ошибок не найдено — попробуй нажать «Запуск»!</p>
+              )}
+
+              {issue && hintLevel < 3 && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={requestHint}
+                  className="w-full rounded-lg font-bold text-xs gap-1.5 h-8 border-accent-foreground/30 hover:bg-accent/30"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  {hintLabels[hintLevel + 1]}
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -153,12 +314,13 @@ const Workspace = () => {
                 {/* Blocks */}
                 <div className="flex-1 overflow-y-auto p-3 space-y-2">
                   {currentCategory.blocks.map((block, i) => (
-                    <div
+                    <button
                       key={i}
-                      className={`scratch-block ${currentCategory.color} text-primary-foreground`}
+                      onClick={() => addBlock(block, currentCategory.color, currentCategory.id)}
+                      className={`scratch-block ${currentCategory.color} text-primary-foreground w-full text-left cursor-pointer hover:scale-[1.02] hover:shadow-md transition-all`}
                     >
                       {block}
-                    </div>
+                    </button>
                   ))}
                 </div>
               </div>
@@ -169,17 +331,38 @@ const Workspace = () => {
                   backgroundImage: "radial-gradient(circle, hsl(var(--border)) 1px, transparent 1px)",
                   backgroundSize: "20px 20px"
                 }} />
-                <div className="relative p-6 space-y-2">
-                  {/* Example assembled blocks */}
-                  <div className="scratch-block bg-scratch-events text-primary-foreground inline-block">
-                    <div className="flex items-center gap-2">
-                      <Flag className="w-4 h-4" />
-                      когда ⚑ нажат
+                <div className="relative p-6 space-y-2 overflow-y-auto h-full">
+                  {program.length === 0 && (
+                    <div className={`border-2 border-dashed rounded-2xl p-8 text-center transition-colors ${
+                      hintLevel >= 1 && issue?.blockId === null
+                        ? "border-destructive bg-destructive/5 animate-pulse"
+                        : "border-border"
+                    }`}>
+                      <p className="text-sm font-bold text-muted-foreground">Перетащи или нажми на блоки слева</p>
+                      <p className="text-xs text-muted-foreground mt-1">Здесь появится твоя программа</p>
                     </div>
-                  </div>
-                  <div className="scratch-block bg-scratch-motion text-primary-foreground inline-block ml-0">
-                    идти 100 шагов
-                  </div>
+                  )}
+                  {program.map((block) => {
+                    const isHighlighted = hintLevel >= 1 && issue?.blockId === block.id;
+                    return (
+                      <div
+                        key={block.id}
+                        className={`scratch-block ${block.color} text-primary-foreground inline-flex items-center gap-2 group transition-all ${
+                          isHighlighted ? "ring-4 ring-destructive/70 ring-offset-2 ring-offset-muted animate-pulse" : ""
+                        }`}
+                      >
+                        {block.category === "events" && <Flag className="w-4 h-4" />}
+                        {block.text}
+                        <button
+                          onClick={() => removeBlock(block.id)}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity ml-1 hover:scale-110"
+                          aria-label="Удалить блок"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
                 {/* Zoom controls */}
                 <div className="absolute bottom-4 right-4 flex items-center gap-1 bg-card rounded-xl shadow-md p-1">
