@@ -1,0 +1,21 @@
+import { useState } from "react";
+import LearningHeader from "@/components/LearningHeader";
+import CoursePicker from "@/components/CoursePicker";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Star, Users, Search, Trophy } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
+import { coursePoints, learningGroups, students, totalPoints } from "@/lib/student-progress";
+
+export default function TeacherPoints() {
+  const [courseId, setCourseId] = useState("1");
+  const [groupId, setGroupId] = useState("all");
+  const [search, setSearch] = useState("");
+  const visible = students.filter(student => (groupId === "all" || student.groupId === groupId) && student.name.toLowerCase().includes(search.toLowerCase()));
+  return <div className="min-h-screen bg-background"><LearningHeader teacher /><main className="container py-8 md:py-10 space-y-7"><div className="flex flex-wrap gap-4 justify-between items-start"><div><h1 className="text-3xl font-extrabold">Баллы учеников</h1><p className="mt-2 text-muted-foreground">Личный прогресс и вклад в результат группы</p></div><Button asChild variant="outline" className="rounded-xl font-bold"><Link to={`/teacher/leaderboard?course=${courseId}`}><Trophy />Рейтинг групп</Link></Button></div>
+    <div className="flex flex-wrap items-end gap-4"><div className="space-y-2"><p className="text-xs font-bold text-muted-foreground">Курс</p><CoursePicker value={courseId} onChange={setCourseId} /></div><div className="space-y-2 w-full sm:w-48"><p className="text-xs font-bold text-muted-foreground">Группа</p><Select value={groupId} onValueChange={setGroupId}><SelectTrigger aria-label="Группа" className="rounded-xl bg-card"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Все группы</SelectItem>{learningGroups.map(group => <SelectItem key={group.id} value={group.id}>{group.emoji} {group.name}</SelectItem>)}</SelectContent></Select></div><div className="relative flex-1 min-w-48"><Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" /><Input aria-label="Поиск ученика" placeholder="Найти ученика" value={search} onChange={event => setSearch(event.target.value)} className="pl-10 rounded-xl bg-card" /></div></div>
+    <section aria-label="Сводка баллов" className="grid sm:grid-cols-2 gap-4"><div className="bg-secondary/10 p-5 rounded-2xl flex gap-4 items-center"><Users className="text-secondary" /><div><p className="text-2xl font-extrabold">{visible.length}</p><p className="text-sm text-muted-foreground">Учеников в выборке</p></div></div><div className="bg-accent/20 p-5 rounded-2xl flex gap-4 items-center"><Star className="text-accent-foreground" /><div><p className="text-2xl font-extrabold">{visible.reduce((sum, student) => sum + coursePoints(student, courseId), 0)}</p><p className="text-sm text-muted-foreground">Баллов в выбранном курсе</p></div></div></section>
+    <div className="overflow-x-auto"><table className="w-full min-w-[620px] text-left"><caption className="text-left text-xs text-muted-foreground pb-3">Демо-данные · список учеников без индивидуального рейтинга</caption><thead><tr className="border-b border-border text-sm text-muted-foreground"><th className="py-4 px-3">Ученик</th><th className="py-4 px-3">Группа</th><th className="py-4 px-3 text-right">Баллы в курсе</th><th className="py-4 px-3 text-right">За все курсы</th></tr></thead><tbody>{visible.map(student => <tr key={student.id} className="border-b border-border/60"><td className="px-3 py-5"><span className="inline-flex items-center gap-3 font-bold"><span className="text-2xl p-2 bg-muted rounded-xl" aria-hidden>{student.avatar}</span>{student.name}</span></td><td className="px-3 py-5 text-sm">{learningGroups.find(group => group.id === student.groupId)?.name}</td><td className="px-3 py-5 text-right font-extrabold text-primary">{coursePoints(student, courseId)}</td><td className="px-3 py-5 text-right font-bold">{totalPoints(student)}</td></tr>)}</tbody></table>{visible.length === 0 && <p className="py-12 text-center text-muted-foreground">Ученики не найдены</p>}</div>
+  </main></div>;
+}

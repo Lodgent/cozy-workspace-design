@@ -13,6 +13,9 @@ import TeacherDashboard from "./pages/TeacherDashboard";
 import TeacherCourseEditor from "./pages/TeacherCourseEditor";
 import TeacherTaskEditor from "./pages/TeacherTaskEditor";
 import NotFound from "./pages/NotFound";
+import Achievements from "./pages/Achievements";
+import GroupLeaderboard from "./pages/GroupLeaderboard";
+import TeacherPoints from "./pages/TeacherPoints";
 
 const queryClient = new QueryClient();
 
@@ -27,9 +30,13 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/courses" element={<Courses />} />
+          <Route path="/achievements" element={<Achievements />} />
+          <Route path="/leaderboard" element={<GroupLeaderboard />} />
           <Route path="/course/:courseId" element={<CourseDetail />} />
           <Route path="/workspace/:courseId/:lessonId" element={<Workspace />} />
           <Route path="/teacher" element={<TeacherDashboard />} />
+          <Route path="/teacher/points" element={<TeacherPoints />} />
+          <Route path="/teacher/leaderboard" element={<GroupLeaderboard />} />
           <Route path="/teacher/course/:courseId" element={<TeacherCourseEditor />} />
           <Route path="/teacher/task/:taskId" element={<TeacherTaskEditor />} />
           <Route path="*" element={<NotFound />} />

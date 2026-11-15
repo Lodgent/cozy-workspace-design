@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, BookOpen, CheckCircle2, Circle, Lock, Play, Clock } from "lucide-react";
+import { ArrowLeft, BookOpen, CheckCircle2, Circle, Lock, Play, Clock, Star, Trophy } from "lucide-react";
+import { coursePoints, currentStudent } from "@/lib/student-progress";
 
 const mockLessons = [
   {
@@ -80,6 +81,10 @@ const CourseDetail = () => {
                 <span className="flex items-center gap-1.5"><BookOpen className="w-4 h-4" /> 5 уроков</span>
                 <span className="flex items-center gap-1.5"><Clock className="w-4 h-4" /> ~2 часа</span>
               </div>
+               <div className="flex flex-wrap items-center gap-4">
+                 <span className="inline-flex items-center gap-2 font-bold"><Star className="h-5 w-5" />{coursePoints(currentStudent, courseId ?? "1")} баллов в курсе</span>
+                 <Button asChild variant="ghost" className="text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground rounded-xl"><Link to={`/leaderboard?course=${courseId ?? "1"}`}><Trophy />Рейтинг групп</Link></Button>
+               </div>
             </div>
             <div className="bg-primary-foreground/10 backdrop-blur-sm rounded-2xl p-5 min-w-[200px]">
               <div className="text-sm text-primary-foreground/70 mb-2 font-medium">Прогресс</div>
